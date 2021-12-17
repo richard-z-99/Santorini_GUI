@@ -1,31 +1,24 @@
-import tkinter as tk
-import sys
-from santorini_classesGUI import*
-from boardGUI import Board
-import copy
+from constants import *
 
-directions = { 
-    'n': (-1,0), 
-    'ne': (-1,1), 
-    'e': (0,1), 
-    'se': (1,1), 
-    's': (1,0), 
-    'sw': (1,-1), 
-    'w': (0, -1), 
-    'nw': (-1, -1)
-    }
+from santorini_classes import*
+from board import Board
+import copy
+import sys
+import tkinter as tk
+
 
 class Memento:
     def __init__(self, kind1, kind2, playgame):
         #initialize default board
-        board = Board(kind1, kind2, "white")
-        board.get_square(3,1).occupant = board.white_player.worker1
-        board.get_square(1,3).occupant = board.white_player.worker2
-        board.get_square(1,1).occupant = board.blue_player.worker1
-        board.get_square(3,3).occupant = board.blue_player.worker2
+        board = Board(kind1, kind2, "white", playgame)
+        board.get_square(3,1).update_occupant(board.white_player.worker1)
+        board.get_square(1,3).update_occupant(board.white_player.worker2)
+        board.get_square(1,1).update_occupant(board.blue_player.worker1)
+        board.get_square(3,3).update_occupant(board.blue_player.worker2)
 
         self.history = [board]
         self.cur_board = 0
+        self.playgame = playgame
     
     def undo(self):
         if(self.cur_board > 0):
@@ -42,10 +35,13 @@ class Memento:
 
 class PlayGame(tk.Frame):
     def __init__(self, kind1, kind2):
+        self.game_state = "choose_worker"
         self.window = tk.Tk()
         self.memento = Memento(kind1, kind2, self)
         self.kind1 = kind1
         self.kind2 = kind2
+
+        self.selected_worker = None
 
         #keeps track of current board
         self.board = self.memento.history[self.memento.cur_board]
@@ -79,6 +75,8 @@ class PlayGame(tk.Frame):
 
     def print_curr_board(self):
         self.board.print_board()
+        #print("TODO: print turn/player information")
+
 
     def undo(self):
         self.memento.undo()
@@ -88,22 +86,21 @@ class PlayGame(tk.Frame):
         self.memento.redo()
         self.update_board()
 
-    # def initial_setup(self):
-
     
     def run(self):
         self.print_curr_board()
-        #change while condition to not_win later
-        while True:
+        self.window.mainloop()
+
+        while False:
             output2 = "Turn: {}, {} ({}{})".format(self.memento.cur_board+1, self.board.curr_player.color, self.board.curr_player.worker1.name, self.board.curr_player.worker2.name)
 
             if sys.argv[4] == "on":
                 output2 += ", {}".format(self.board.display_score())
-
-            print(output2)
             
             if not (self.board.check_won(self.board.curr_player) is None and self.board.check_won(self.board.get_opponent(self.board.curr_player)) is None):
                 break
+
+            print(output2)
             
             if sys.argv[3] == "on":
                 self.prompt()
@@ -165,8 +162,12 @@ class PlayGame(tk.Frame):
 
     def execute_move(self, move):
         #make copy of old board and put into memento
+        #print("output2: {}".format(output2))
+        # if(len(self.memento.history) > 1):
+        #     print("move: {}".format(self.memento.history[1].curr_player.color))
+
         self.update_board()
-        old_board_copy = copy.deepcopy(self.board)
+        old_board_copy = copy.copy(self.board)
         self.memento.history[self.memento.cur_board] = old_board_copy
 
         self.board.execute_move(move)
@@ -174,11 +175,17 @@ class PlayGame(tk.Frame):
 
 
     def execute_build(self, build):
+        #print("output2: {}".format(output2))
+
+
         self.board.execute_build(build)
+        
 
         #update memento
         self.memento.next(self.board)
         self.update_board()
+        # if(len(self.memento.history) > 1):
+        #     print("build: {}".format(self.memento.history[1].curr_player.color))
 
 
 
@@ -200,4 +207,7 @@ if __name__ == "__main__":
         #turn on score display
 
     game1 = PlayGame(kind1, kind2)
+    # game1.board.get_square(3, 0).level = 3
+    # game1.board.get_square(3,1).level = 2
     game1.run()
+
