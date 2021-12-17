@@ -1,32 +1,25 @@
-import tkinter as tk
-import sys
-from santorini_classesGUI import*
+from constants import *
 
-opp_directions = { 
-    'n': 's', 
-    'ne': 'sw', 
-    'e': 'w', 
-    'se': 'nw', 
-    's': 'n', 
-    'sw': 'ne', 
-    'w': 'e', 
-    'nw': 'se'
-    }
+from santorini_classes import*
+
+
 
 class Board:
     def __init__(self, kind1, kind2, color, playgame):
         #pass in PlayGame object, access window. Pack buttons onto board_frame.
         self.playgame = playgame
         self.board_frame = tk.Frame(self.playgame.window)
+
         self.player_factory = PlayerFactory()
         self.white_player = self.player_factory.create_player(kind1, "white")
         self.blue_player = self.player_factory.create_player(kind2, "blue")
-        self.squares = self.create_board()
         self.color = color
         if self.color == "white":
             self.curr_player = self.white_player
         if self.color == "blue":
             self.curr_player = self.blue_player
+
+        self.squares = self.create_board()
 
     def create_board(self):
         #create 2d array board w/o borders
@@ -34,7 +27,7 @@ class Board:
         for row in range(5):
             new_row = []
             for col in range(5):
-                new_row.append(Square(row, col))
+                new_row.append(Square(row, col, self))
             board.append(new_row)
         #print("hello")
         return board
@@ -220,7 +213,8 @@ class Board:
         high_score = -1
         for move in legal_moves:
             score = self.get_move_score(move)
-            if score > high_score:
+            print(score)
+            if score >= high_score:
                 best_move = move
                 high_score = score
 
@@ -255,6 +249,7 @@ class Board:
 
     #updates board state given move
     def execute_move(self, move):
+        #print("hello!")
         old_row = move.worker.row
         old_col = move.worker.col
         new_row = move.get_new_coords()[0]
@@ -264,10 +259,12 @@ class Board:
 
         #update occupancy status of old/new squares
         old_square = self.get_square(old_row, old_col)
+        old_square.button.config(fg = "black")
         old_square.update_occupant(None)
 
         new_square = self.get_square(new_row, new_col)
         new_square.update_occupant(move.worker)
+        new_square.button.config(fg = "green")
 
 
     #moves in opposite direction of given move
@@ -326,8 +323,8 @@ class Board:
         # print('+--+--+--+--+--+')
         for i in range(5):
             for j in range(5):
-                self.squares[i][j].grid(row=i, column=j, columnspan=5)
-
+                self.squares[i][j].button.grid(row=i, column=j)
+        self.board_frame.pack()
 
 
 
