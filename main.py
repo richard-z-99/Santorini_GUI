@@ -45,6 +45,16 @@ class PlayGame(tk.Frame):
 
         #keeps track of current board
         self.board = self.memento.history[self.memento.cur_board]
+        
+        self.score_frame = tk.Frame(self.window)
+        
+        self.score_str = tk.StringVar()
+        self.score_str.set(self.board.display_score())
+        self.score_label = tk.Label(self.score_frame, textvariable=self.score_str)
+
+        self.player_str = tk.StringVar()
+        self.player_str.set(self.board.curr_player.color)
+        self.player_label = tk.Label(self.score_frame, textvariable=self.player_str)
 
         #keep track of current frame
         self.curr_frame = self.board.board_frame
@@ -89,6 +99,10 @@ class PlayGame(tk.Frame):
     
     def run(self):
         self.print_curr_board()
+        if sys.argv[4] == "on":
+            self.player_label.pack()
+            self.score_label.pack()
+            self.score_frame.pack()
         self.window.mainloop()
 
         while False:
@@ -180,7 +194,8 @@ class PlayGame(tk.Frame):
 
         self.board.execute_build(build)
         self.board.switch_player()
-
+        self.player_str.set(self.board.curr_player.color)
+        self.score_str.set(self.board.display_score())
 
         #update memento
         self.memento.next(self.board)
